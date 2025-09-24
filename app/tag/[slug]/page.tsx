@@ -1,0 +1,71 @@
+import { BlogCard } from "@/components/blog_card";
+import { GetTags, GetTagsPost } from "@/data";
+import type { Post } from "@/types";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Home, Tag } from "lucide-react";
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const getTitle = slug?.trim().replaceAll(" ", "-");
+  return { title: `${getTitle} | Blogify` };
+}
+
+export async function generateStaticParams() {
+  return GetTags();
+}
+
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const slug = (await params).slug;
+  const posts = await GetTagsPost(slug);
+  if (posts.length === 0) {
+    notFound();
+  }
+  const getTag = slug.replaceAll("-", " ");
+  return (
+    <div className="py-24">
+      <div className="mb-5 flex flex-col justify-between md:mb-14 lg:mb-16">
+        <Breadcrumb className="mb-5">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                className="flex flex-row items-center gap-x-3 text-foreground capitalize"
+                href="/"
+              >
+                <Home size={22} />
+                Home
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage className="flex flex-row items-center gap-x-3 capitalize">
+                {" "}
+                <Tag size={22} /> {getTag}
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+      <div className="mx-auto grid grid-cols-1 gap-5 lg:grid-cols-2">
+        {posts.map((post) => (
+          <BlogCard key={post.id} post={post} />
+        ))}
+      </div>
+    </div>
+  );
+}
